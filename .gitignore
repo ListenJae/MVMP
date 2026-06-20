@@ -29,3 +29,6 @@ pnpm-debug.log*
 
 # Local project toolchains
 .tools/
+
+# Local worker state
+apps/discord-worker/data/

@@ -18,7 +18,7 @@ Double-click these files from the project root:
 - `start-all.bat`: starts the Minecraft server, Discord worker, and web app.
 - `start-minecraft-server.bat`: builds the plugin, copies it into the server plugins folder, and starts Minecraft.
 - `stop-minecraft-server.bat`: stops the Minecraft server.
-- `start-discord-worker.bat`: syncs Discord channel messages into the web feed file.
+- `start-discord-worker.bat`: syncs Discord channel messages into persistent local history and web feed files.
 - `start-web.bat`: starts the MVMP web page at `http://localhost:3000`.
 - `build-plugin.bat`: builds and copies the Minecraft plugin jar.
 - `update-dependencies.bat`: installs npm dependencies and verifies the web/plugin builds.
@@ -28,6 +28,7 @@ Before running Discord features, edit `.env` and fill in:
 - `DISCORD_WEBHOOK_URL`
 - `DISCORD_BOT_TOKEN`
 - `DISCORD_CHANNEL_ID`
+- `MVMP_WORLDS`
 
 ### Manual Commands
 
@@ -76,7 +77,43 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 - The Minecraft server uses the Paper image from `itzg/minecraft-server`.
 - The bridge plugin currently sends chat, joins, leaves, deaths, and server lifecycle events to a Discord webhook.
-- The Discord worker writes a small public feed file for the web app. This keeps the first version simple while leaving room for a database-backed API later.
+- The Discord worker stores persistent local history in `apps/discord-worker/data/mvmp-store.json`.
+- The worker exports web-readable files under `apps/discord-web/public/data`, including world lists, world feeds, player status, and event logs.
+
+## Worlds And History
+
+Configure one or more worlds in `.env`:
+
+```env
+MVMP_WORLDS=main:123456789012345678:Main World:The main survival world,creative:234567890123456789:Creative:The building world
+```
+
+Each world entry uses:
+
+```text
+world-id:discord-channel-id:display-name:description
+```
+
+When `start-discord-worker.bat` runs, it:
+
+- reads each configured Discord channel;
+- stores messages in persistent local history;
+- detects join and leave messages from the Minecraft bridge;
+- keeps last-known player online/offline state;
+- exports `/data/worlds.json`, `/data/feeds/<world-id>.json`, and `/data/status/<world-id>.json` for the web app.
+
+World pages are available at:
+
+```text
+/worlds/<world-id>
+```
+
+For example:
+
+```text
+/worlds/main
+/worlds/creative
+```
 
 ## Web Deployment
 

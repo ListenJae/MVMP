@@ -1,0 +1,10 @@
+[
+  {
+    "id": "setup-1",
+    "worldId": "main",
+    "author": "MVMP",
+    "content": "Start the Discord worker and this board will fill with persistent world messages.",
+    "createdAt": "2026-06-20T00:00:00.000Z",
+    "source": "minecraft"
+  }
+]

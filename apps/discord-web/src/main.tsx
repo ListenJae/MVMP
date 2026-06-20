@@ -5,9 +5,44 @@ import "./styles.css";
 
 type FeedItem = {
   id: string;
+  worldId?: string;
   author: string;
   content: string;
   createdAt: string;
+  source?: "discord" | "minecraft";
+};
+
+type WorldSummary = {
+  id: string;
+  name: string;
+  description: string;
+  onlinePlayers: number;
+  totalKnownPlayers: number;
+};
+
+type PlayerStatus = {
+  name: string;
+  online: boolean;
+  worldId: string;
+  lastSeenAt: string;
+  lastEvent: string;
+};
+
+type WorldEvent = {
+  id: string;
+  worldId: string;
+  type: string;
+  player?: string;
+  summary: string;
+  createdAt: string;
+};
+
+type WorldStatus = {
+  world: WorldSummary;
+  updatedAt: string;
+  onlinePlayers: PlayerStatus[];
+  knownPlayers: PlayerStatus[];
+  recentEvents: WorldEvent[];
 };
 
 function App() {
@@ -21,16 +56,34 @@ function App() {
     return <LegalPage type="privacy" />;
   }
 
+  if (path.startsWith("/worlds/")) {
+    return <WorldPage worldId={path.replace("/worlds/", "").split("/")[0] || "main"} />;
+  }
+
   return <HomePage />;
 }
 
 function HomePage() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [worlds, setWorlds] = useState<WorldSummary[]>([]);
 
   useEffect(() => {
-    fetch(appHref("feed.json"))
-      .then((response) => response.json())
-      .then(setFeed)
+    fetchJson<{ worlds: WorldSummary[] }>("data/worlds.json")
+      .then((data) => setWorlds(data.worlds))
+      .catch(() =>
+        setWorlds([
+          {
+            id: "main",
+            name: "Main World",
+            description: "The main MVMP world.",
+            onlinePlayers: 0,
+            totalKnownPlayers: 0
+          }
+        ])
+      );
+
+    fetchJson<FeedItem[]>("feed.json")
+      .then((data) => setFeed(data))
       .catch(() => setFeed([]));
   }, []);
 
@@ -59,44 +112,39 @@ function HomePage() {
         <div className="metric-grid">
           <Metric icon={<Server size={20} />} label="Server Core" value="Paper" />
           <Metric icon={<MessageSquareText size={20} />} label="Discord Link" value="Live" />
-          <Metric icon={<Activity size={20} />} label="Web Feed" value="Online" />
-          <Metric icon={<UsersRound size={20} />} label="Party Slots" value="Ready" />
+          <Metric icon={<Gamepad2 size={20} />} label="Worlds" value={String(worlds.length || 1)} />
+          <Metric icon={<UsersRound size={20} />} label="Online Now" value={String(sumOnline(worlds))} />
+        </div>
+      </section>
+
+      <section className="world-section" aria-label="World selector">
+        <div className="section-heading">
+          <h2>World Select</h2>
+          <span>Persistent logs per world</span>
+        </div>
+
+        <div className="world-grid">
+          {worlds.map((world) => (
+            <a className="world-card" href={appHref(`worlds/${world.id}`)} key={world.id}>
+              <span className="world-card-kicker">World</span>
+              <strong>{world.name}</strong>
+              <p>{world.description}</p>
+              <div className="world-card-stats">
+                <span>{world.onlinePlayers} online</span>
+                <span>{world.totalKnownPlayers} known</span>
+              </div>
+            </a>
+          ))}
         </div>
       </section>
 
       <section className="feed-section" aria-label="MVMP feed">
         <div className="section-heading">
-          <h2>World Feed</h2>
-          <span>Synced from Discord</span>
+          <h2>Latest Feed</h2>
+          <span>Synced from the first world</span>
         </div>
 
-        <div className="feed-list">
-          {feed.length === 0 ? (
-            <article className="feed-item">
-              <div className="feed-dot system" />
-              <div>
-                <div className="feed-header">
-                  <h3>MVMP</h3>
-                  <time>Waiting</time>
-                </div>
-                <p>No synced messages yet. Start the Discord worker to fill this board.</p>
-              </div>
-            </article>
-          ) : (
-            feed.map((item) => (
-            <article className="feed-item" key={item.id}>
-              <div className="feed-dot chat" />
-              <div>
-                <div className="feed-header">
-                  <h3>{item.author}</h3>
-                  <time>{formatTime(item.createdAt)}</time>
-                </div>
-                <p>{item.content}</p>
-              </div>
-            </article>
-            ))
-          )}
-        </div>
+        <FeedList feed={feed} emptyText="No synced messages yet. Start the Discord worker to fill this board." />
       </section>
 
       <footer className="site-footer">
@@ -107,6 +155,149 @@ function HomePage() {
         </nav>
       </footer>
     </main>
+  );
+}
+
+function WorldPage({ worldId }: { worldId: string }) {
+  const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [status, setStatus] = useState<WorldStatus | null>(null);
+
+  useEffect(() => {
+    fetchJson<FeedItem[]>(`data/feeds/${worldId}.json`)
+      .then(setFeed)
+      .catch(() => setFeed([]));
+
+    fetchJson<WorldStatus>(`data/status/${worldId}.json`)
+      .then(setStatus)
+      .catch(() => setStatus(null));
+  }, [worldId]);
+
+  const world = status?.world ?? {
+    id: worldId,
+    name: titleCase(worldId),
+    description: "A world on the MVMP server.",
+    onlinePlayers: 0,
+    totalKnownPlayers: 0
+  };
+
+  return (
+    <main className="app-shell">
+      <nav className="topbar" aria-label="Main navigation">
+        <a className="brand-mark" href={appHref("")}>
+          MVMP
+        </a>
+        <div className="topbar-links">
+          <a href={appHref("")}>Hub</a>
+          <a href={appHref("terms")}>Terms</a>
+          <a href={appHref("privacy")}>Privacy</a>
+        </div>
+      </nav>
+
+      <section className="world-hero">
+        <p className="eyebrow">World Instance</p>
+        <h1>{world.name}</h1>
+        <p className="summary">{world.description}</p>
+      </section>
+
+      <section className="status-strip" aria-label="World status">
+        <Metric icon={<UsersRound size={20} />} label="Online" value={String(status?.onlinePlayers.length ?? 0)} />
+        <Metric icon={<Activity size={20} />} label="Known Players" value={String(status?.knownPlayers.length ?? 0)} />
+        <Metric icon={<MessageSquareText size={20} />} label="Events Saved" value={String(status?.recentEvents.length ?? 0)} />
+        <Metric icon={<Server size={20} />} label="Last Sync" value={status ? formatTime(status.updatedAt) : "Waiting"} />
+      </section>
+
+      <section className="world-section" aria-label="Online players">
+        <div className="section-heading">
+          <h2>Player Board</h2>
+          <span>Persistent join and leave history</span>
+        </div>
+        <PlayerBoard players={status?.knownPlayers ?? []} />
+      </section>
+
+      <section className="feed-section" aria-label="World events">
+        <div className="section-heading">
+          <h2>Event Log</h2>
+          <span>Stored across restarts</span>
+        </div>
+        <EventList events={status?.recentEvents ?? []} />
+      </section>
+
+      <section className="feed-section" aria-label="World feed">
+        <div className="section-heading">
+          <h2>World Feed</h2>
+          <span>Discord channel archive</span>
+        </div>
+        <FeedList feed={feed} emptyText="No archived messages for this world yet." />
+      </section>
+    </main>
+  );
+}
+
+function FeedList({ feed, emptyText }: { feed: FeedItem[]; emptyText: string }) {
+  return (
+    <div className="feed-list">
+      {feed.length === 0 ? (
+        <article className="feed-item">
+          <div className="feed-dot system" />
+          <div>
+            <div className="feed-header">
+              <h3>MVMP</h3>
+              <time>Waiting</time>
+            </div>
+            <p>{emptyText}</p>
+          </div>
+        </article>
+      ) : (
+        feed.map((item) => (
+          <article className="feed-item" key={item.id}>
+            <div className={`feed-dot ${item.source === "minecraft" ? "system" : "chat"}`} />
+            <div>
+              <div className="feed-header">
+                <h3>{item.author}</h3>
+                <time>{formatTime(item.createdAt)}</time>
+              </div>
+              <p>{item.content}</p>
+            </div>
+          </article>
+        ))
+      )}
+    </div>
+  );
+}
+
+function PlayerBoard({ players }: { players: PlayerStatus[] }) {
+  if (players.length === 0) {
+    return <p className="empty-copy">No player history yet.</p>;
+  }
+
+  return (
+    <div className="player-grid">
+      {players.map((player) => (
+        <article className={`player-card ${player.online ? "online" : ""}`} key={`${player.worldId}:${player.name}`}>
+          <strong>{player.name}</strong>
+          <span>{player.online ? "Online" : "Offline"}</span>
+          <time>Last seen {formatTime(player.lastSeenAt)}</time>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function EventList({ events }: { events: WorldEvent[] }) {
+  if (events.length === 0) {
+    return <p className="empty-copy">No world events have been saved yet.</p>;
+  }
+
+  return (
+    <div className="event-list">
+      {events.map((event) => (
+        <article className="event-row" key={event.id}>
+          <span>{event.type}</span>
+          <p>{event.summary}</p>
+          <time>{formatTime(event.createdAt)}</time>
+        </article>
+      ))}
+    </div>
   );
 }
 
@@ -296,6 +487,28 @@ function getAppPath() {
     : currentPath;
 
   return strippedPath === "" ? "/" : strippedPath;
+}
+
+function fetchJson<T>(path: string): Promise<T> {
+  return fetch(appHref(path)).then((response) => {
+    if (!response.ok) {
+      throw new Error(`Failed to load ${path}`);
+    }
+
+    return response.json() as Promise<T>;
+  });
+}
+
+function sumOnline(worlds: WorldSummary[]) {
+  return worlds.reduce((total, world) => total + world.onlinePlayers, 0);
+}
+
+function titleCase(value: string) {
+  return value
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function appHref(path: string) {

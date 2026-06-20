@@ -1,0 +1,12 @@
+{
+  "updatedAt": "2026-06-20T00:00:00.000Z",
+  "worlds": [
+    {
+      "id": "main",
+      "name": "Main World",
+      "description": "The main MVMP world. Connect the Discord worker to begin saving live history.",
+      "onlinePlayers": 0,
+      "totalKnownPlayers": 0
+    }
+  ]
+}
