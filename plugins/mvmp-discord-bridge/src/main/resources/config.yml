@@ -3,9 +3,9 @@ discord:
   username: "MVMP Server"
 
 messages:
-  server-started: "Server started."
-  server-stopped: "Server stopped."
-  player-join: "%player% joined the server."
-  player-quit: "%player% left the server."
-  player-death: "%message%"
-  chat: "<%player%> %message%"
+  server-started: "[server] Server started."
+  server-stopped: "[server] Server stopped."
+  player-join: "[%world%] %player% joined the server."
+  player-quit: "[%world%] %player% left the server."
+  player-death: "[%world%] %message%"
+  chat: "[%world%] <%player%> %message%"

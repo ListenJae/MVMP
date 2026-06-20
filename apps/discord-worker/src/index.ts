@@ -106,19 +106,20 @@ async function syncAllWorlds(store: Store) {
 }
 
 function ingestMessage(store: Store, world: WorldConfig, message: Message) {
-  const content = message.content.trim();
-  if (!content) {
+  const parsedContent = extractWorldPrefix(message.content.trim(), world);
+  if (!parsedContent.content) {
     return;
   }
 
+  const resolvedWorld = ensureWorld(store, parsedContent.world);
   const author = message.member?.displayName ?? message.author.displayName;
   const source = message.webhookId || author.toLowerCase().includes("mvmp") ? "minecraft" : "discord";
   const storedMessage: StoredMessage = {
     id: message.id,
-    worldId: world.id,
+    worldId: resolvedWorld.id,
     channelId: world.channelId,
     author,
-    content,
+    content: parsedContent.content,
     createdAt: message.createdAt.toISOString(),
     source
   };
@@ -235,7 +236,7 @@ async function loadStore(): Promise<Store> {
   try {
     const raw = await readFile(storePath, "utf8");
     const parsed = JSON.parse(raw) as Store;
-    parsed.worlds = worlds;
+    parsed.worlds = mergeWorlds(worlds, parsed.worlds ?? []);
     return parsed;
   } catch {
     return {
@@ -307,6 +308,53 @@ async function saveAndExport(store: Store) {
   console.log(`Stored ${store.messages.length} messages and exported ${store.worlds.length} worlds.`);
 }
 
+function extractWorldPrefix(content: string, fallbackWorld: WorldConfig): { world: WorldConfig; content: string } {
+  const match = content.match(/^\[([^\]]+)]\s*(.*)$/);
+  if (!match?.[1]) {
+    return { world: fallbackWorld, content };
+  }
+
+  const worldId = normalizeWorldId(match[1]);
+  if (worldId === "server") {
+    return { world: fallbackWorld, content: match[2]?.trim() ?? "" };
+  }
+
+  const knownWorld = worlds.find((world) => world.id === worldId);
+
+  return {
+    world:
+      knownWorld ??
+      {
+        id: worldId,
+        name: titleCase(match[1]),
+        channelId: fallbackWorld.channelId,
+        description: `Auto-discovered world from [${match[1]}] Minecraft logs.`
+      },
+    content: match[2]?.trim() ?? ""
+  };
+}
+
+function mergeWorlds(primary: WorldConfig[], secondary: WorldConfig[]) {
+  const merged = [...primary];
+  for (const world of secondary) {
+    if (!merged.some((candidate) => candidate.id === world.id)) {
+      merged.push(world);
+    }
+  }
+
+  return merged;
+}
+
+function ensureWorld(store: Store, world: WorldConfig) {
+  const existing = store.worlds.find((candidate) => candidate.id === world.id);
+  if (existing) {
+    return existing;
+  }
+
+  store.worlds.push(world);
+  return world;
+}
+
 function parseWorlds(): WorldConfig[] {
   const raw = process.env.MVMP_WORLDS;
   if (raw) {
@@ -319,7 +367,7 @@ function parseWorlds(): WorldConfig[] {
         const resolvedChannelId =
           channelId === "DISCORD_CHANNEL_ID" ? process.env.DISCORD_CHANNEL_ID ?? "" : channelId;
 
-        return { id, channelId: resolvedChannelId, name, description };
+        return { id: normalizeWorldId(id), channelId: resolvedChannelId, name, description };
       })
       .filter((world) => world.id && world.channelId && world.channelId !== "DISCORD_CHANNEL_ID");
 
@@ -348,6 +396,22 @@ function upsertById<T extends { id: string }>(items: T[], item: T) {
   } else {
     items.push(item);
   }
+}
+
+function normalizeWorldId(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function titleCase(value: string) {
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
 }
 
 void client.login(requiredToken);

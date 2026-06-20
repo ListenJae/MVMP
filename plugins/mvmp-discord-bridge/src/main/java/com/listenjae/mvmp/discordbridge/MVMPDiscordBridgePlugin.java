@@ -52,14 +52,16 @@ public final class MVMPDiscordBridgePlugin extends JavaPlugin implements Listene
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         sendConfiguredMessage("messages.player-join", Map.of(
-            "player", event.getPlayer().getName()
+            "player", event.getPlayer().getName(),
+            "world", event.getPlayer().getWorld().getName()
         ));
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         sendConfiguredMessage("messages.player-quit", Map.of(
-            "player", event.getPlayer().getName()
+            "player", event.getPlayer().getName(),
+            "world", event.getPlayer().getWorld().getName()
         ));
     }
 
@@ -69,7 +71,8 @@ public final class MVMPDiscordBridgePlugin extends JavaPlugin implements Listene
             ? event.getEntity().getName() + " died."
             : PlainTextComponentSerializer.plainText().serialize(event.deathMessage());
         sendConfiguredMessage("messages.player-death", Map.of(
-            "message", deathMessage
+            "message", deathMessage,
+            "world", event.getEntity().getWorld().getName()
         ));
     }
 
@@ -78,7 +81,8 @@ public final class MVMPDiscordBridgePlugin extends JavaPlugin implements Listene
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
         sendConfiguredMessage("messages.chat", Map.of(
             "player", event.getPlayer().getName(),
-            "message", message
+            "message", message,
+            "world", event.getPlayer().getWorld().getName()
         ));
     }
 

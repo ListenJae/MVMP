@@ -82,22 +82,42 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 ## Worlds And History
 
-Configure one or more worlds in `.env`:
+The bridge plugin sends Minecraft messages with a world prefix:
 
-```env
-MVMP_WORLDS=main:123456789012345678:Main World:The main survival world,creative:234567890123456789:Creative:The building world
+```text
+[world] <Steve> hello
+[world_nether] Steve left the server.
 ```
 
-Each world entry uses:
+The Discord worker reads that prefix and stores messages under the matching web world page.
+Messages without a prefix go to the configured fallback world.
+
+Configure the fallback world and shared Discord channel in `.env`:
+
+```env
+DISCORD_CHANNEL_ID=123456789012345678
+MVMP_WORLDS=main:DISCORD_CHANNEL_ID:Main World:Fallback world for messages without a [world] prefix
+```
+
+Each `MVMP_WORLDS` entry uses:
 
 ```text
 world-id:discord-channel-id:display-name:description
 ```
 
+You can still define known worlds up front, even if they share the same Discord channel:
+
+```env
+MVMP_WORLDS=world:DISCORD_CHANNEL_ID:Overworld:The main survival world,world_nether:DISCORD_CHANNEL_ID:Nether:The hot place
+```
+
+If the worker sees a new prefix that is not configured, it creates an auto-discovered world entry.
+
 When `start-discord-worker.bat` runs, it:
 
 - reads each configured Discord channel;
 - stores messages in persistent local history;
+- detects `[world]` prefixes from Minecraft bridge messages;
 - detects join and leave messages from the Minecraft bridge;
 - keeps last-known player online/offline state;
 - exports `/data/worlds.json`, `/data/feeds/<world-id>.json`, and `/data/status/<world-id>.json` for the web app.
