@@ -1,0 +1,11 @@
+discord:
+  webhook-url: ""
+  username: "MVMP Server"
+
+messages:
+  server-started: "Server started."
+  server-stopped: "Server stopped."
+  player-join: "%player% joined the server."
+  player-quit: "%player% left the server."
+  player-death: "%message%"
+  chat: "<%player%> %message%"

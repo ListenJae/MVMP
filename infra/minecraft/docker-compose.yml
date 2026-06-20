@@ -1,0 +1,21 @@
+services:
+  minecraft:
+    image: itzg/minecraft-server:java21
+    container_name: mvmp-minecraft
+    restart: unless-stopped
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      TYPE: PAPER
+      VERSION: "${MINECRAFT_VERSION:-1.21.1}"
+      MEMORY: "${MINECRAFT_MEMORY:-4G}"
+      MOTD: "${MINECRAFT_MOTD:-MVMP Friends Server}"
+      DIFFICULTY: "${MINECRAFT_DIFFICULTY:-normal}"
+      MAX_PLAYERS: "${MINECRAFT_MAX_PLAYERS:-20}"
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "${RCON_PASSWORD:-mvmp-local-rcon}"
+      DISCORD_WEBHOOK_URL: "${DISCORD_WEBHOOK_URL:-}"
+    volumes:
+      - ./data:/data
+      - ./plugins:/data/plugins

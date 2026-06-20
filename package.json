@@ -1,0 +1,18 @@
+{
+  "name": "mvmp",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/discord-web",
+    "apps/discord-worker"
+  ],
+  "scripts": {
+    "dev:web": "set PATH=%cd%\\.tools\\node;%PATH%&& .tools\\node\\npm.cmd --workspace @mvmp/discord-web run dev",
+    "dev:worker": "set PATH=%cd%\\.tools\\node;%PATH%&& .tools\\node\\npm.cmd --workspace @mvmp/discord-worker run dev",
+    "build:web": "set PATH=%cd%\\.tools\\node;%PATH%&& .tools\\node\\npm.cmd --workspace @mvmp/discord-web run build",
+    "build:plugin": "set JAVA_HOME=%cd%\\.tools\\jdk&& set GRADLE_USER_HOME=%cd%\\.tools\\gradle-user-home&& .tools\\gradle\\bin\\gradle.bat --offline -p plugins\\mvmp-discord-bridge build",
+    "build:plugin:online": "set JAVA_HOME=%cd%\\.tools\\jdk&& set GRADLE_USER_HOME=%cd%\\.tools\\gradle-user-home&& .tools\\gradle\\bin\\gradle.bat -p plugins\\mvmp-discord-bridge build",
+    "server:up": "docker compose -f infra/minecraft/docker-compose.yml --env-file .env up -d",
+    "server:down": "docker compose -f infra/minecraft/docker-compose.yml --env-file .env down"
+  }
+}

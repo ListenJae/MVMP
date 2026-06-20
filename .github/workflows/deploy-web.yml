@@ -1,0 +1,72 @@
+name: Deploy web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/deploy-web.yml"
+      - "apps/discord-web/**"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Set Vite base path
+        shell: bash
+        run: |
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          if [[ "$repo_name" == *.github.io ]]; then
+            echo "VITE_BASE_PATH=/" >> "$GITHUB_ENV"
+          else
+            echo "VITE_BASE_PATH=/$repo_name/" >> "$GITHUB_ENV"
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web
+        run: npm --workspace @mvmp/discord-web run build
+
+      - name: Add SPA fallback
+        run: cp apps/discord-web/dist/index.html apps/discord-web/dist/404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/discord-web/dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

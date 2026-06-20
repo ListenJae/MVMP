@@ -1,0 +1,6 @@
+name: MVMPDiscordBridge
+version: ${version}
+main: com.listenjae.mvmp.discordbridge.MVMPDiscordBridgePlugin
+api-version: "1.21"
+author: ListenJae
+description: Mirrors Minecraft server events and chat to Discord.
