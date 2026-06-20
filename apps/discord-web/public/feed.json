@@ -2,7 +2,7 @@
   {
     "id": "setup-1",
     "author": "MVMP",
-    "content": "Discord worker가 실행되면 이 파일이 실제 채널 메시지로 갱신됩니다.",
+    "content": "Start the Discord worker and this board will fill with live channel messages.",
     "createdAt": "2026-06-19T00:00:00.000Z"
   }
 ]

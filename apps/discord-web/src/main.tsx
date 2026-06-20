@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Activity, MessageSquareText, Server, ShieldCheck, UsersRound } from "lucide-react";
+import { Activity, Gamepad2, MessageSquareText, Server, ShieldCheck, UsersRound } from "lucide-react";
 import "./styles.css";
 
 type FeedItem = {
@@ -28,7 +28,7 @@ function HomePage() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
 
   useEffect(() => {
-    fetch("/feed.json")
+    fetch(appHref("feed.json"))
       .then((response) => response.json())
       .then(setFeed)
       .catch(() => setFeed([]));
@@ -36,31 +36,54 @@ function HomePage() {
 
   return (
     <main className="app-shell">
+      <nav className="topbar" aria-label="Main navigation">
+        <a className="brand-mark" href={appHref("")}>
+          MVMP
+        </a>
+        <div className="topbar-links">
+          <a href={appHref("terms")}>Terms</a>
+          <a href={appHref("privacy")}>Privacy</a>
+        </div>
+      </nav>
+
       <section className="status-panel" aria-label="MVMP status">
         <div>
-          <p className="eyebrow">MVMP</p>
-          <h1>친구들과 마인크래프트를 더 재밌게.</h1>
+          <p className="eyebrow">Block Party Server</p>
+          <h1>Mine together. Chat everywhere.</h1>
           <p className="summary">
-            서버 호스팅, Discord 브릿지, 웹 대시보드를 하나의 프로젝트로 묶는 시작점입니다.
+            MVMP links a private Minecraft server, Discord chat, and a tiny web dashboard for
+            friends who want the world to feel alive even when they are away from spawn.
           </p>
         </div>
 
         <div className="metric-grid">
-          <Metric icon={<Server size={20} />} label="Server" value="Paper" />
-          <Metric icon={<MessageSquareText size={20} />} label="Bridge" value="Webhook" />
-          <Metric icon={<Activity size={20} />} label="Web" value="Vite" />
-          <Metric icon={<UsersRound size={20} />} label="Players" value="Ready" />
+          <Metric icon={<Server size={20} />} label="Server Core" value="Paper" />
+          <Metric icon={<MessageSquareText size={20} />} label="Discord Link" value="Live" />
+          <Metric icon={<Activity size={20} />} label="Web Feed" value="Online" />
+          <Metric icon={<UsersRound size={20} />} label="Party Slots" value="Ready" />
         </div>
       </section>
 
       <section className="feed-section" aria-label="MVMP feed">
         <div className="section-heading">
-          <h2>최근 소식</h2>
-          <span>Discord channel feed</span>
+          <h2>World Feed</h2>
+          <span>Synced from Discord</span>
         </div>
 
         <div className="feed-list">
-          {feed.map((item) => (
+          {feed.length === 0 ? (
+            <article className="feed-item">
+              <div className="feed-dot system" />
+              <div>
+                <div className="feed-header">
+                  <h3>MVMP</h3>
+                  <time>Waiting</time>
+                </div>
+                <p>No synced messages yet. Start the Discord worker to fill this board.</p>
+              </div>
+            </article>
+          ) : (
+            feed.map((item) => (
             <article className="feed-item" key={item.id}>
               <div className="feed-dot chat" />
               <div>
@@ -71,15 +94,16 @@ function HomePage() {
                 <p>{item.content}</p>
               </div>
             </article>
-          ))}
+            ))
+          )}
         </div>
       </section>
 
       <footer className="site-footer">
         <span>MVMP</span>
         <nav aria-label="Legal links">
-          <a href={appHref("terms")}>이용약관</a>
-          <a href={appHref("privacy")}>개인정보 처리방침</a>
+          <a href={appHref("terms")}>Terms</a>
+          <a href={appHref("privacy")}>Privacy</a>
         </nav>
       </footer>
     </main>
@@ -106,8 +130,8 @@ function LegalPage({ type }: { type: "terms" | "privacy" }) {
       <footer className="site-footer">
         <span>Last updated: 2026-06-20</span>
         <nav aria-label="Legal links">
-          <a href={appHref("terms")}>이용약관</a>
-          <a href={appHref("privacy")}>개인정보 처리방침</a>
+          <a href={appHref("terms")}>Terms</a>
+          <a href={appHref("privacy")}>Privacy</a>
         </nav>
       </footer>
     </main>
@@ -118,60 +142,61 @@ function TermsContent() {
   return (
     <article className="legal-document">
       <p className="eyebrow">MVMP</p>
-      <h1>이용약관</h1>
+      <h1>Terms of Service</h1>
       <p className="legal-lead">
-        본 약관은 MVMP Minecraft 서버, Discord 봇, 웹 페이지 이용에 관한 기본 조건을 설명합니다.
+        These terms explain the basic rules for using the MVMP Minecraft server, Discord bot,
+        and web dashboard.
       </p>
 
-      <LegalSection title="1. 서비스 목적">
+      <LegalSection title="1. Service purpose">
         <p>
-          MVMP는 친구들과 Minecraft 멀티플레이를 즐기기 위해 운영되는 비상업적 커뮤니티
-          프로젝트입니다. 서비스는 Minecraft 서버 호스팅, 서버 이벤트의 Discord 전달, Discord 채널
-          정보의 웹 표시 기능을 포함할 수 있습니다.
+          MVMP is a non-commercial community project for friends playing Minecraft together. The
+          service may include server hosting, forwarding server events to Discord, and showing
+          selected Discord channel information on the web dashboard.
         </p>
       </LegalSection>
 
-      <LegalSection title="2. 이용 조건">
+      <LegalSection title="2. Community rules">
         <p>
-          이용자는 Minecraft 서버와 Discord 서버의 규칙을 따라야 하며, 다른 이용자의 플레이 경험을
-          방해하거나 서비스 운영을 훼손하는 행위를 해서는 안 됩니다.
+          Players must follow the Minecraft server rules and Discord server rules. Do not disrupt
+          other players, damage the community, or interfere with service operation.
         </p>
       </LegalSection>
 
-      <LegalSection title="3. 금지 행위">
+      <LegalSection title="3. Prohibited behavior">
         <ul>
-          <li>욕설, 괴롭힘, 혐오 표현, 스팸 등 커뮤니티에 해를 주는 행위</li>
-          <li>서버 취약점 악용, 비인가 자동화, 치트 또는 악성 클라이언트 사용</li>
-          <li>타인의 개인정보, 계정 정보, 비공개 대화 내용을 무단으로 공개하는 행위</li>
-          <li>서비스 로그, Discord 메시지, 웹 표시 데이터를 악의적으로 조작하려는 행위</li>
+          <li>Harassment, hate speech, spam, or other behavior that harms the community</li>
+          <li>Exploits, unauthorized automation, cheats, or malicious clients</li>
+          <li>Sharing another person's private information, account details, or private messages</li>
+          <li>Attempting to tamper with logs, Discord messages, or web feed data</li>
         </ul>
       </LegalSection>
 
-      <LegalSection title="4. 서비스 변경 및 중단">
+      <LegalSection title="4. Changes and availability">
         <p>
-          MVMP는 개인 프로젝트로 운영되므로 점검, 비용, 기술적 문제, 커뮤니티 운영 필요에 따라
-          서비스 일부 또는 전체가 변경되거나 중단될 수 있습니다.
+          MVMP is run as a personal project. Features may change, pause, or stop because of
+          maintenance, cost, technical issues, or community needs.
         </p>
       </LegalSection>
 
-      <LegalSection title="5. 콘텐츠와 책임">
+      <LegalSection title="5. Content responsibility">
         <p>
-          이용자가 Minecraft 또는 Discord에서 작성한 채팅, 닉네임, 활동 기록은 서버 운영과 웹 표시를
-          위해 사용될 수 있습니다. 이용자는 본인이 작성한 내용에 책임을 집니다.
+          Chat, nicknames, and activity created in Minecraft or Discord may be used for server
+          operation and web display. You are responsible for the content you post.
         </p>
       </LegalSection>
 
-      <LegalSection title="6. 제재">
+      <LegalSection title="6. Moderation">
         <p>
-          운영자는 규칙 위반, 보안 위험, 커뮤니티 보호 필요가 있는 경우 경고, 메시지 삭제, 서버 접속
-          제한, Discord 권한 제한 등의 조치를 할 수 있습니다.
+          Operators may issue warnings, remove messages, limit server access, or restrict Discord
+          permissions when needed to protect the community or service.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. 문의">
+      <LegalSection title="7. Contact">
         <p>
-          약관 또는 서비스 이용에 관한 문의는 MVMP 운영자에게 Discord 서버 내 지정된 채널 또는 직접
-          메시지로 연락해 주세요.
+          For questions about these terms or the service, contact the MVMP operator through the
+          designated Discord channel or direct message.
         </p>
       </LegalSection>
     </article>
@@ -182,60 +207,63 @@ function PrivacyContent() {
   return (
     <article className="legal-document">
       <p className="eyebrow">MVMP</p>
-      <h1>개인정보 처리방침</h1>
+      <h1>Privacy Policy</h1>
       <p className="legal-lead">
-        본 방침은 MVMP가 Minecraft 서버, Discord 봇, 웹 페이지 운영 과정에서 어떤 정보를 처리하는지
-        설명합니다.
+        This policy explains what information MVMP processes while running the Minecraft server,
+        Discord bot, and web dashboard.
       </p>
 
-      <LegalSection title="1. 처리하는 정보">
+      <LegalSection title="1. Information processed">
         <ul>
-          <li>Minecraft 닉네임, 접속/퇴장, 사망 메시지, 서버 채팅 등 서버 이벤트 정보</li>
-          <li>Discord 사용자 표시 이름, 메시지 내용, 메시지 작성 시각, 채널 ID 등 채널 동기화 정보</li>
-          <li>서비스 운영 중 생성되는 오류 로그, 접속 상태, 설정 정보</li>
+          <li>Minecraft nicknames, join/leave events, death messages, and server chat</li>
+          <li>Discord display names, message content, message timestamps, and channel IDs</li>
+          <li>Error logs, service status, and configuration data generated during operation</li>
         </ul>
       </LegalSection>
 
-      <LegalSection title="2. 정보 이용 목적">
+      <LegalSection title="2. How information is used">
         <p>
-          수집된 정보는 Minecraft 서버 상태 공유, Discord 채널 동기화, 웹 페이지 표시, 문제 해결,
-          커뮤니티 운영과 안전한 서비스 제공을 위해 사용됩니다.
+          Information is used to share Minecraft server activity, sync Discord channel data, render
+          the web feed, troubleshoot issues, moderate the community, and keep the service running.
         </p>
       </LegalSection>
 
-      <LegalSection title="3. 공개 범위">
+      <LegalSection title="3. Visibility">
         <p>
-          Minecraft 서버 이벤트는 설정된 Discord 채널로 전송될 수 있고, Discord 채널의 일부 메시지는
-          MVMP 웹 페이지에 표시될 수 있습니다. 민감한 정보나 비공개 대화는 공개 채널에 작성하지 않는
-          것을 권장합니다.
+          Minecraft server events may be sent to configured Discord channels, and selected Discord
+          messages may appear on the MVMP web dashboard. Avoid posting sensitive information in
+          public channels.
         </p>
       </LegalSection>
 
-      <LegalSection title="4. 보관 기간">
+      <LegalSection title="4. Retention">
         <p>
-          웹 표시용 Discord 피드는 최근 메시지 중심으로 갱신되며, 운영 로그와 서버 데이터는 서비스
-          운영상 필요한 기간 동안 보관될 수 있습니다. 불필요해진 정보는 운영자가 정리할 수 있습니다.
+          The public web feed is refreshed around recent messages. Logs and server data may be kept
+          as long as needed for operation, troubleshooting, or moderation, and may be cleaned up by
+          the operator.
         </p>
       </LegalSection>
 
-      <LegalSection title="5. 제3자 제공">
+      <LegalSection title="5. Third-party services">
         <p>
-          MVMP는 서비스 운영에 필요한 범위에서 Discord, Minecraft 서버 소프트웨어, 호스팅 환경을
-          사용합니다. 별도의 판매 목적 또는 광고 목적의 개인정보 제공은 하지 않습니다.
+          MVMP uses Discord, Minecraft server software, GitHub Pages, and hosting tools required to
+          run the service. MVMP does not sell personal information or share it for advertising.
         </p>
       </LegalSection>
 
-      <LegalSection title="6. 이용자의 요청">
+      <LegalSection title="6. User requests">
         <p>
-          본인과 관련된 메시지 삭제, 웹 표시 제외, 데이터 처리 문의가 필요한 경우 MVMP 운영자에게
-          Discord 서버 내 지정된 채널 또는 직접 메시지로 요청할 수 있습니다.
+          To request message removal, exclusion from the web display, or information about data
+          processing, contact the MVMP operator through the designated Discord channel or direct
+          message.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. 보안">
+      <LegalSection title="7. Security">
         <p>
-          봇 토큰, webhook URL, 서버 설정 등 민감한 값은 비공개 환경 파일로 관리합니다. 다만 개인
-          프로젝트 특성상 완전한 무중단 운영이나 절대적인 보안을 보장하지는 않습니다.
+          Sensitive values such as bot tokens, webhook URLs, and server settings are kept in private
+          environment files. MVMP is a personal project and cannot guarantee perfect security or
+          uninterrupted availability.
         </p>
       </LegalSection>
     </article>
@@ -252,9 +280,11 @@ function LegalSection({ title, children }: { title: string; children: React.Reac
 }
 
 function formatTime(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "short",
-    timeStyle: "short"
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
   }).format(new Date(value));
 }
 
