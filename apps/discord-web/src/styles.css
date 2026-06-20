@@ -558,6 +558,71 @@ h1 {
   margin-top: 6px;
 }
 
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.guide-step {
+  display: grid;
+  gap: 10px;
+  min-height: 210px;
+  padding: 16px;
+  background: #26371f;
+  border: 3px solid #0a0f08;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.32);
+}
+
+.guide-step h2 {
+  margin: 0;
+  color: #9be564;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.guide-step p {
+  margin: 0;
+  color: #f8f3d6;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.guide-step code,
+.code-block,
+.legal-section code {
+  color: #ffe66d;
+  background: #10170e;
+  border: 2px solid #0a0f08;
+}
+
+.guide-step code,
+.legal-section code {
+  display: inline-flex;
+  align-self: end;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 8px;
+  overflow-wrap: anywhere;
+  font-family: "Press Start 2P", Inter, sans-serif;
+  font-size: 0.62rem;
+  line-height: 1.7;
+}
+
+.code-block {
+  display: block;
+  width: 100%;
+  margin: 10px 0 12px;
+  padding: 14px;
+  overflow-x: auto;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.65;
+  white-space: pre;
+}
+
 @media (max-width: 760px) {
   .app-shell,
   .legal-shell {
@@ -584,7 +649,8 @@ h1 {
 
   .status-strip,
   .world-grid,
-  .player-grid {
+  .player-grid,
+  .guide-grid {
     grid-template-columns: 1fr;
   }
 

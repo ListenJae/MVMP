@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Activity, Gamepad2, MessageSquareText, Server, ShieldCheck, UsersRound } from "lucide-react";
+import { Activity, BookOpen, Gamepad2, MessageSquareText, Server, ShieldCheck, UsersRound } from "lucide-react";
 import "./styles.css";
 
 type FeedItem = {
@@ -56,6 +56,10 @@ function App() {
     return <LegalPage type="privacy" />;
   }
 
+  if (path === "/guide") {
+    return <GuidePage />;
+  }
+
   if (path.startsWith("/worlds/")) {
     return <WorldPage worldId={path.replace("/worlds/", "").split("/")[0] || "main"} />;
   }
@@ -94,6 +98,7 @@ function HomePage() {
           MVMP
         </a>
         <div className="topbar-links">
+          <a href={appHref("guide")}>Guide</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </div>
@@ -150,6 +155,7 @@ function HomePage() {
       <footer className="site-footer">
         <span>MVMP</span>
         <nav aria-label="Legal links">
+          <a href={appHref("guide")}>Guide</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </nav>
@@ -188,6 +194,7 @@ function WorldPage({ worldId }: { worldId: string }) {
         </a>
         <div className="topbar-links">
           <a href={appHref("")}>Hub</a>
+          <a href={appHref("guide")}>Guide</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </div>
@@ -301,6 +308,129 @@ function EventList({ events }: { events: WorldEvent[] }) {
   );
 }
 
+function GuidePage() {
+  return (
+    <main className="legal-shell">
+      <header className="legal-header">
+        <a className="home-link" href={appHref("")}>
+          MVMP
+        </a>
+        <div className="legal-badge">
+          <BookOpen size={18} />
+          <span>Server Guide</span>
+        </div>
+      </header>
+
+      <article className="legal-document">
+        <p className="eyebrow">Operator Manual</p>
+        <h1>Worlds, Plugins, and Logs</h1>
+        <p className="legal-lead">
+          Use this guide when adding a new Minecraft world, applying the MVMP Discord bridge plugin,
+          and making sure each world appears on its own web page.
+        </p>
+
+        <div className="guide-grid">
+          <GuideStep
+            title="1. Create or open a world"
+            body="Create worlds the way you normally do on the Paper server. The web dashboard uses the Bukkit world name, so names like world, world_nether, creative, or event_world become web world IDs."
+            command="/mv create creative normal"
+          />
+          <GuideStep
+            title="2. Keep one Discord log channel"
+            body="You can use a single Discord channel for all worlds. The plugin writes a prefix like [world] or [creative], and the worker uses that prefix to split the history."
+            command="#mvmp-log"
+          />
+          <GuideStep
+            title="3. Build and copy the plugin"
+            body="After code changes or a fresh setup, build the bridge and place the jar in the server plugins folder. The batch file does both."
+            command="build-plugin.bat"
+          />
+          <GuideStep
+            title="4. Restart the server"
+            body="Restart Minecraft so Paper loads the latest MVMP Discord bridge. New messages should include the world prefix."
+            command="start-minecraft-server.bat"
+          />
+          <GuideStep
+            title="5. Run the Discord worker"
+            body="The worker reads Discord messages, stores persistent history, detects join and leave events, and exports web data per world."
+            command="start-discord-worker.bat"
+          />
+          <GuideStep
+            title="6. Open the world page"
+            body="When the worker sees [creative], it creates data for /worlds/creative. Unknown prefixes are auto-discovered and saved."
+            command="/worlds/creative"
+          />
+        </div>
+
+        <LegalSection title="World prefix format">
+          <p>The bridge plugin sends messages like this:</p>
+          <pre className="code-block">{`[world] Steve joined the server.
+[creative] <Alex> look at this build
+[world_nether] Steve left the server.`}</pre>
+          <p>
+            The prefix becomes the world page ID. For example, <code>[creative]</code> becomes{" "}
+            <code>/worlds/creative</code>.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="Environment setup">
+          <p>
+            Use one fallback world for messages without a prefix. Additional worlds can be
+            auto-discovered from Minecraft logs.
+          </p>
+          <pre className="code-block">{`DISCORD_CHANNEL_ID=123456789012345678
+MVMP_WORLDS=main:DISCORD_CHANNEL_ID:Main World:Fallback world for messages without a [world] prefix`}</pre>
+        </LegalSection>
+
+        <LegalSection title="What gets saved">
+          <ul>
+            <li>Discord and Minecraft bridge messages are stored locally in persistent history.</li>
+            <li>Join and leave messages update the last-known online/offline player board.</li>
+            <li>Each world exports a feed and status file for the web dashboard.</li>
+            <li>Restarting the worker does not wipe the saved history.</li>
+          </ul>
+        </LegalSection>
+
+        <LegalSection title="Files to know">
+          <ul>
+            <li>
+              <code>apps/discord-worker/data/mvmp-store.json</code> stores local history.
+            </li>
+            <li>
+              <code>apps/discord-web/public/data/worlds.json</code> lists web worlds.
+            </li>
+            <li>
+              <code>apps/discord-web/public/data/feeds/&lt;world-id&gt;.json</code> stores world feeds.
+            </li>
+            <li>
+              <code>apps/discord-web/public/data/status/&lt;world-id&gt;.json</code> stores player status and events.
+            </li>
+          </ul>
+        </LegalSection>
+      </article>
+
+      <footer className="site-footer">
+        <span>MVMP Guide</span>
+        <nav aria-label="Legal links">
+          <a href={appHref("")}>Hub</a>
+          <a href={appHref("terms")}>Terms</a>
+          <a href={appHref("privacy")}>Privacy</a>
+        </nav>
+      </footer>
+    </main>
+  );
+}
+
+function GuideStep({ title, body, command }: { title: string; body: string; command: string }) {
+  return (
+    <section className="guide-step">
+      <h2>{title}</h2>
+      <p>{body}</p>
+      <code>{command}</code>
+    </section>
+  );
+}
+
 function LegalPage({ type }: { type: "terms" | "privacy" }) {
   const isTerms = type === "terms";
 
@@ -321,6 +451,7 @@ function LegalPage({ type }: { type: "terms" | "privacy" }) {
       <footer className="site-footer">
         <span>Last updated: 2026-06-20</span>
         <nav aria-label="Legal links">
+          <a href={appHref("guide")}>Guide</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </nav>
