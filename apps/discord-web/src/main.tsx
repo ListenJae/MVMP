@@ -60,6 +60,10 @@ function App() {
     return <GuidePage />;
   }
 
+  if (path === "/guide-ko") {
+    return <KoreanGuidePage />;
+  }
+
   if (path.startsWith("/worlds/")) {
     return <WorldPage worldId={path.replace("/worlds/", "").split("/")[0] || "main"} />;
   }
@@ -99,6 +103,7 @@ function HomePage() {
         </a>
         <div className="topbar-links">
           <a href={appHref("guide")}>Guide</a>
+          <a href={appHref("guide-ko")}>한국어 가이드</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </div>
@@ -156,6 +161,7 @@ function HomePage() {
         <span>MVMP</span>
         <nav aria-label="Legal links">
           <a href={appHref("guide")}>Guide</a>
+          <a href={appHref("guide-ko")}>한국어 가이드</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </nav>
@@ -195,6 +201,7 @@ function WorldPage({ worldId }: { worldId: string }) {
         <div className="topbar-links">
           <a href={appHref("")}>Hub</a>
           <a href={appHref("guide")}>Guide</a>
+          <a href={appHref("guide-ko")}>한국어 가이드</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </div>
@@ -413,6 +420,165 @@ MVMP_WORLDS=main:DISCORD_CHANNEL_ID:Main World:Fallback world for messages witho
         <span>MVMP Guide</span>
         <nav aria-label="Legal links">
           <a href={appHref("")}>Hub</a>
+          <a href={appHref("guide-ko")}>한국어 가이드</a>
+          <a href={appHref("terms")}>Terms</a>
+          <a href={appHref("privacy")}>Privacy</a>
+        </nav>
+      </footer>
+    </main>
+  );
+}
+
+function KoreanGuidePage() {
+  return (
+    <main className="legal-shell ko-guide">
+      <header className="legal-header">
+        <a className="home-link" href={appHref("")}>
+          MVMP
+        </a>
+        <div className="legal-badge">
+          <BookOpen size={18} />
+          <span>한국어 가이드</span>
+        </div>
+      </header>
+
+      <article className="legal-document">
+        <p className="eyebrow">운영자 매뉴얼</p>
+        <h1>월드 만들기, 플러그인 적용, 서버 시작</h1>
+        <p className="legal-lead">
+          이 페이지는 MVMP 서버에서 새 마인크래프트 월드를 만들고, Discord 브릿지 플러그인을 적용하고,
+          웹에서 월드별 기록을 확인하기 위한 기본 절차입니다.
+        </p>
+
+        <div className="guide-grid">
+          <GuideStep
+            title="1. 서버 폴더 확인"
+            body="Minecraft 서버 데이터는 Docker 볼륨으로 infra/minecraft/data에 저장됩니다. 월드 폴더와 plugins 폴더도 이 데이터 안에서 관리됩니다."
+            command="infra/minecraft/data"
+          />
+          <GuideStep
+            title="2. 플러그인 빌드"
+            body="MVMP Discord Bridge 플러그인을 빌드하고 서버 plugins 폴더로 복사합니다. 코드 변경 후에는 이 파일을 다시 실행하면 됩니다."
+            command="build-plugin.bat"
+          />
+          <GuideStep
+            title="3. 서버 시작"
+            body="Docker Desktop이 실행 중인지 확인한 뒤 서버를 시작합니다. 이 배치 파일은 플러그인 빌드와 복사도 같이 처리합니다."
+            command="start-minecraft-server.bat"
+          />
+          <GuideStep
+            title="4. 새 월드 만들기"
+            body="서버 안에서 Multiverse 같은 월드 관리 플러그인을 사용하면 새 월드를 명령으로 만들 수 있습니다. 월드 이름이 웹 주소의 world-id가 됩니다."
+            command="/mv create creative normal"
+          />
+          <GuideStep
+            title="5. 월드 이동"
+            body="월드를 만든 뒤 플레이어가 해당 월드로 이동하면 채팅, 접속, 퇴장 로그에 그 월드 이름이 붙습니다."
+            command="/mvtp creative"
+          />
+          <GuideStep
+            title="6. 기록 worker 실행"
+            body="Discord worker는 Discord 로그 채널을 읽고 메시지를 월드별로 저장합니다. worker를 다시 실행해도 기존 기록은 유지됩니다."
+            command="start-discord-worker.bat"
+          />
+        </div>
+
+        <LegalSection title="전체 실행 순서">
+          <ol className="guide-list">
+            <li>Docker Desktop을 먼저 켭니다.</li>
+            <li>
+              <code>build-plugin.bat</code>을 실행해서 플러그인을 빌드합니다.
+            </li>
+            <li>
+              <code>start-minecraft-server.bat</code>으로 서버를 시작합니다.
+            </li>
+            <li>마인크래프트 서버에 접속합니다.</li>
+            <li>필요하면 월드 관리 플러그인으로 새 월드를 만듭니다.</li>
+            <li>
+              <code>start-discord-worker.bat</code>을 실행해서 Discord 로그를 웹 데이터로 저장합니다.
+            </li>
+            <li>
+              <code>start-web.bat</code>을 실행하고 웹에서 월드 페이지를 확인합니다.
+            </li>
+          </ol>
+        </LegalSection>
+
+        <LegalSection title="월드가 웹에서 구분되는 방식">
+          <p>
+            MVMP 플러그인은 Minecraft 이벤트를 Discord로 보낼 때 메시지 앞에 월드 이름을 붙입니다.
+          </p>
+          <pre className="code-block">{`[world] Steve joined the server.
+[creative] <Alex> look at this build
+[world_nether] Steve left the server.`}</pre>
+          <p>
+            worker는 이 앞부분을 읽어서 월드별 JSON 파일을 만듭니다. 예를 들어 <code>[creative]</code>가
+            붙은 메시지는 웹에서 <code>/worlds/creative</code> 페이지에 표시됩니다.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="Discord 채널은 하나만 써도 됩니다">
+          <p>
+            지금 구조에서는 월드마다 Discord 채널을 새로 만들 필요가 없습니다. 하나의 로그 채널에 모든
+            메시지를 모으고, <code>[world]</code> prefix로 구분합니다.
+          </p>
+          <pre className="code-block">{`DISCORD_CHANNEL_ID=123456789012345678
+MVMP_WORLDS=main:DISCORD_CHANNEL_ID:Main World:prefix 없는 메시지가 들어갈 기본 월드`}</pre>
+        </LegalSection>
+
+        <LegalSection title="새 월드 예시">
+          <p>서버에서 새 월드를 만들었다고 가정해봅시다.</p>
+          <pre className="code-block">{`/mv create creative normal
+/mvtp creative`}</pre>
+          <p>
+            이후 creative 월드에서 채팅하면 Discord에 <code>[creative]</code>가 붙은 로그가 올라오고,
+            worker가 자동으로 <code>/worlds/creative</code> 데이터를 만듭니다.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="플러그인 적용 확인">
+          <ul>
+            <li>서버 시작 후 콘솔에서 MVMPDiscordBridge 로드 메시지를 확인합니다.</li>
+            <li>플레이어가 접속하면 Discord에 <code>[world] Player joined the server.</code> 형태로 올라와야 합니다.</li>
+            <li>채팅하면 <code>[world] &lt;Player&gt; message</code> 형태로 올라와야 합니다.</li>
+            <li>prefix가 없다면 서버를 재시작했는지, 최신 jar가 plugins 폴더에 복사됐는지 확인합니다.</li>
+          </ul>
+        </LegalSection>
+
+        <LegalSection title="기록이 저장되는 위치">
+          <ul>
+            <li>
+              영구 기록: <code>apps/discord-worker/data/mvmp-store.json</code>
+            </li>
+            <li>
+              월드 목록: <code>apps/discord-web/public/data/worlds.json</code>
+            </li>
+            <li>
+              월드별 피드: <code>apps/discord-web/public/data/feeds/&lt;world-id&gt;.json</code>
+            </li>
+            <li>
+              월드별 접속 상태: <code>apps/discord-web/public/data/status/&lt;world-id&gt;.json</code>
+            </li>
+          </ul>
+          <p>
+            worker를 껐다 켜도 <code>mvmp-store.json</code>이 남아 있으면 기존 기록은 유지됩니다.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="문제가 생겼을 때">
+          <ul>
+            <li>웹에 월드가 안 보이면 <code>start-discord-worker.bat</code>이 실행 중인지 확인합니다.</li>
+            <li>Discord 메시지는 있는데 웹에 없으면 worker 창의 에러 메시지를 확인합니다.</li>
+            <li>월드명이 이상하면 Minecraft의 실제 Bukkit world name을 확인합니다.</li>
+            <li>서버가 안 켜지면 Docker Desktop이 실행 중인지 확인합니다.</li>
+          </ul>
+        </LegalSection>
+      </article>
+
+      <footer className="site-footer">
+        <span>MVMP 한국어 가이드</span>
+        <nav aria-label="Guide links">
+          <a href={appHref("")}>Hub</a>
+          <a href={appHref("guide")}>English Guide</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </nav>
@@ -452,6 +618,7 @@ function LegalPage({ type }: { type: "terms" | "privacy" }) {
         <span>Last updated: 2026-06-20</span>
         <nav aria-label="Legal links">
           <a href={appHref("guide")}>Guide</a>
+          <a href={appHref("guide-ko")}>한국어 가이드</a>
           <a href={appHref("terms")}>Terms</a>
           <a href={appHref("privacy")}>Privacy</a>
         </nav>

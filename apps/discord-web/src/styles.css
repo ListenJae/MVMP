@@ -513,6 +513,23 @@ h1 {
   line-height: 1.35;
 }
 
+.ko-guide .legal-document h1,
+.ko-guide .guide-step code,
+.ko-guide .legal-section code {
+  font-family: Inter, "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+
+.ko-guide .legal-document h1 {
+  font-weight: 900;
+}
+
+.ko-guide .legal-lead,
+.ko-guide .guide-step p,
+.ko-guide .legal-section p,
+.ko-guide .legal-section li {
+  word-break: keep-all;
+}
+
 .legal-lead {
   margin-bottom: 28px;
   color: #d8e7c9;
@@ -552,6 +569,11 @@ h1 {
 .legal-section ul {
   margin: 0;
   padding-left: 20px;
+}
+
+.guide-list {
+  margin: 0;
+  padding-left: 22px;
 }
 
 .legal-section li + li {
