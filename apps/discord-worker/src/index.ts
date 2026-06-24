@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { Client, GatewayIntentBits, Message, Partials, TextChannel } from "discord.js";
+import { Client, EmbedBuilder, GatewayIntentBits, Message, Partials, TextChannel } from "discord.js";
 import { config as loadEnv } from "dotenv";
 
 type WorldConfig = {
@@ -44,6 +44,7 @@ type Store = {
   messages: StoredMessage[];
   players: PlayerStatus[];
   events: StoredEvent[];
+  dashboardMessageId?: string;
   updatedAt: string;
 };
 
@@ -56,6 +57,7 @@ const publicOutputDir = resolve(
   process.cwd(),
   process.env.MVMP_PUBLIC_OUTPUT_DIR ?? "../discord-web/public/data"
 );
+const dashboardChannelId = process.env.MVMP_DASHBOARD_CHANNEL_ID ?? process.env.DISCORD_CHANNEL_ID;
 
 if (!token) {
   throw new Error("DISCORD_BOT_TOKEN is required.");
@@ -279,6 +281,8 @@ async function saveAndExport(store: Store) {
   store.events.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   store.updatedAt = new Date().toISOString();
 
+  await publishDiscordDashboard(store);
+
   await mkdir(dirname(storePath), { recursive: true });
   await writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
 
@@ -330,6 +334,87 @@ async function saveAndExport(store: Store) {
   }
 
   console.log(`Stored ${store.messages.length} messages and exported ${store.worlds.length} worlds.`);
+}
+
+async function publishDiscordDashboard(store: Store) {
+  if (!dashboardChannelId) {
+    return;
+  }
+
+  const channel = await client.channels.fetch(dashboardChannelId);
+  if (!(channel instanceof TextChannel)) {
+    throw new Error("MVMP_DASHBOARD_CHANNEL_ID must point to a readable text channel.");
+  }
+
+  const embeds = buildDashboardEmbeds(store);
+
+  if (store.dashboardMessageId) {
+    try {
+      const message = await channel.messages.fetch(store.dashboardMessageId);
+      await message.edit({ embeds });
+      return;
+    } catch {
+      store.dashboardMessageId = undefined;
+    }
+  }
+
+  const message = await channel.send({ embeds });
+  store.dashboardMessageId = message.id;
+  console.log(`Created Discord dashboard message: ${message.id}`);
+}
+
+function buildDashboardEmbeds(store: Store) {
+  const onlinePlayers = store.players.filter((player) => player.online);
+  const recentEvents = store.events.slice(-8).reverse();
+
+  const summary = new EmbedBuilder()
+    .setTitle("MVMP Dashboard")
+    .setColor(0x77b255)
+    .setDescription("Minecraft world status, player presence, and recent server history.")
+    .addFields(
+      { name: "Worlds", value: String(store.worlds.length), inline: true },
+      { name: "Online", value: String(onlinePlayers.length), inline: true },
+      { name: "Saved Events", value: String(store.events.length), inline: true }
+    )
+    .setTimestamp(new Date(store.updatedAt));
+
+  const worldLines = store.worlds.slice(0, 12).map((world) => {
+    const online = store.players.filter((player) => player.worldId === world.id && player.online).length;
+    const known = store.players.filter((player) => player.worldId === world.id).length;
+    return `**${world.name}** \`${world.id}\` - ${online} online / ${known} known`;
+  });
+
+  summary.addFields({
+    name: "World Board",
+    value: worldLines.length > 0 ? worldLines.join("\n") : "No worlds have been synced yet.",
+    inline: false
+  });
+
+  const playerEmbed = new EmbedBuilder()
+    .setTitle("Players Online")
+    .setColor(0xf1c40f)
+    .setDescription(
+      onlinePlayers.length > 0
+        ? onlinePlayers
+            .slice(0, 20)
+            .map((player) => `**${player.name}** in \`${player.worldId}\``)
+            .join("\n")
+        : "No players are currently marked online."
+    );
+
+  const eventEmbed = new EmbedBuilder()
+    .setTitle("Recent Events")
+    .setColor(0x3498db)
+    .setDescription(
+      recentEvents.length > 0
+        ? recentEvents
+            .map((event) => `\`${event.worldId}\` **${event.type}** - ${event.summary}`)
+            .join("\n")
+            .slice(0, 3900)
+        : "No events have been saved yet."
+    );
+
+  return [summary, playerEmbed, eventEmbed];
 }
 
 function extractWorldPrefix(content: string, fallbackWorld: WorldConfig): { world: WorldConfig; content: string } {

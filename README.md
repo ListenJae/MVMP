@@ -30,6 +30,7 @@ Before running Discord features, edit `.env` and fill in:
 - `DISCORD_BOT_TOKEN`
 - `DISCORD_CHANNEL_ID`
 - `MVMP_WORLDS`
+- `MVMP_DASHBOARD_CHANNEL_ID`
 
 ### Manual Commands
 
@@ -122,6 +123,7 @@ When `start-discord-worker.bat` runs, it:
 - detects join and leave messages from the Minecraft bridge;
 - keeps last-known player online/offline state;
 - exports `/data/worlds.json`, `/data/feeds/<world-id>.json`, and `/data/status/<world-id>.json` for the web app.
+- creates or updates a Discord embed dashboard message.
 
 World pages are available at:
 
@@ -180,6 +182,26 @@ publish-web-data.bat
 This commits `apps/discord-web/public/data` and `apps/discord-web/public/feed.json`, pushes the commit,
 and triggers the Pages deployment workflow. Updates usually appear after the GitHub Actions deployment
 finishes.
+
+## Discord Dashboard
+
+The Discord worker can also publish a dashboard directly inside Discord. Set:
+
+```env
+MVMP_DASHBOARD_CHANNEL_ID=123456789012345678
+```
+
+If this is omitted, the worker uses `DISCORD_CHANNEL_ID`. The bot needs:
+
+```text
+View Channel
+Read Message History
+Send Messages
+Embed Links
+```
+
+The worker creates one dashboard message and edits it whenever new data is synced. The dashboard shows
+world count, online players, known players per world, and recent events.
 
 ## Web Deployment
 
