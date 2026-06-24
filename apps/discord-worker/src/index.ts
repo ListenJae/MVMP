@@ -1,7 +1,8 @@
-import "dotenv/config";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { Client, GatewayIntentBits, Message, Partials, TextChannel } from "discord.js";
+import { config as loadEnv } from "dotenv";
 
 type WorldConfig = {
   id: string;
@@ -46,6 +47,8 @@ type Store = {
   updatedAt: string;
 };
 
+loadEnvironment();
+
 const token = process.env.DISCORD_BOT_TOKEN;
 const worlds = parseWorlds();
 const storePath = resolve(process.cwd(), process.env.MVMP_STORE_PATH ?? "data/mvmp-store.json");
@@ -72,6 +75,19 @@ const client = new Client({
   ],
   partials: [Partials.Channel]
 });
+
+function loadEnvironment() {
+  const candidates = [
+    resolve(process.cwd(), ".env"),
+    resolve(process.cwd(), "..", "..", ".env")
+  ];
+
+  for (const path of candidates) {
+    if (existsSync(path)) {
+      loadEnv({ path, override: false });
+    }
+  }
+}
 
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user?.tag ?? "MVMP bot"}`);

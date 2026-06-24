@@ -5,7 +5,8 @@ Thumbs.db
 
 # Minecraft server runtime
 infra/minecraft/data/
-infra/minecraft/plugins/*.jar
+infra/minecraft/plugins/*
+!infra/minecraft/plugins/.gitkeep
 
 # Java / Gradle
 .gradle/
