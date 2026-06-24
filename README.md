@@ -135,6 +135,31 @@ For example:
 /worlds/creative
 ```
 
+## MVMP Minecraft Commands
+
+The MVMP bridge plugin adds a small set of operator commands:
+
+```text
+/mvmp createworld <name>
+/mvmp tpall <world>
+```
+
+`/mvmp createworld adventure` creates:
+
+```text
+adventure_normal
+adventure_nether
+adventure_end
+```
+
+Nether and End portals are routed within the same world set. For example, a Nether portal in
+`adventure_normal` sends players to `adventure_nether`, and returning sends them back to
+`adventure_normal`.
+
+`/mvmp tpall adventure_normal` teleports every online player to that world's spawn.
+
+The bridge also sends completed advancements to Discord, excluding recipe unlock spam.
+
 ## Web Deployment
 
 The web app is deployed with GitHub Actions and GitHub Pages.

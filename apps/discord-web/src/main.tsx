@@ -339,8 +339,8 @@ function GuidePage() {
         <div className="guide-grid">
           <GuideStep
             title="1. Create or open a world"
-            body="Create worlds the way you normally do on the Paper server. The web dashboard uses the Bukkit world name, so names like world, world_nether, creative, or event_world become web world IDs."
-            command="/mv create creative normal"
+            body="Use MVMP to create a linked world set. It creates normal, nether, and end worlds at the same time so portals stay inside the same set."
+            command="/mvmp createworld adventure"
           />
           <GuideStep
             title="2. Keep one Discord log channel"
@@ -364,10 +364,20 @@ function GuidePage() {
           />
           <GuideStep
             title="6. Open the world page"
-            body="When the worker sees [creative], it creates data for /worlds/creative. Unknown prefixes are auto-discovered and saved."
-            command="/worlds/creative"
+            body="When the worker sees [adventure_normal], it creates data for that world. Unknown prefixes are auto-discovered and saved."
+            command="/worlds/adventure_normal"
           />
         </div>
+
+        <LegalSection title="MVMP world commands">
+          <pre className="code-block">{`/mvmp createworld adventure
+/mvmp tpall adventure_normal`}</pre>
+          <p>
+            The first command creates <code>adventure_normal</code>, <code>adventure_nether</code>,
+            and <code>adventure_end</code>. The second command teleports every online player to the
+            target world spawn.
+          </p>
+        </LegalSection>
 
         <LegalSection title="World prefix format">
           <p>The bridge plugin sends messages like this:</p>
@@ -392,6 +402,7 @@ MVMP_WORLDS=main:DISCORD_CHANNEL_ID:Main World:Fallback world for messages witho
         <LegalSection title="What gets saved">
           <ul>
             <li>Discord and Minecraft bridge messages are stored locally in persistent history.</li>
+            <li>Completed advancements are posted to Discord, except recipe unlock spam.</li>
             <li>Join and leave messages update the last-known online/offline player board.</li>
             <li>Each world exports a feed and status file for the web dashboard.</li>
             <li>Restarting the worker does not wipe the saved history.</li>
@@ -468,13 +479,13 @@ function KoreanGuidePage() {
           />
           <GuideStep
             title="4. 새 월드 만들기"
-            body="서버 안에서 Multiverse 같은 월드 관리 플러그인을 사용하면 새 월드를 명령으로 만들 수 있습니다. 월드 이름이 웹 주소의 world-id가 됩니다."
-            command="/mv create creative normal"
+            body="MVMP 명령어로 같은 이름의 노멀, 네더, 엔드 월드를 한 번에 만듭니다. 이렇게 만든 월드 세트는 포탈 이동도 같은 세트 안에서 연결됩니다."
+            command="/mvmp createworld adventure"
           />
           <GuideStep
             title="5. 월드 이동"
-            body="월드를 만든 뒤 플레이어가 해당 월드로 이동하면 채팅, 접속, 퇴장 로그에 그 월드 이름이 붙습니다."
-            command="/mvtp creative"
+            body="새로 만든 월드 세트로 모두를 이동시킬 수 있습니다. 접속 중인 모든 플레이어가 대상 월드 스폰으로 텔레포트됩니다."
+            command="/mvmp tpall adventure_normal"
           />
           <GuideStep
             title="6. 기록 worker 실행"
@@ -516,6 +527,17 @@ function KoreanGuidePage() {
           </p>
         </LegalSection>
 
+        <LegalSection title="MVMP 월드 명령어">
+          <pre className="code-block">{`/mvmp createworld adventure
+/mvmp tpall adventure_normal`}</pre>
+          <p>
+            첫 번째 명령은 <code>adventure_normal</code>, <code>adventure_nether</code>,{" "}
+            <code>adventure_end</code>를 동시에 만듭니다. 네더 포탈은
+            <code>adventure_normal</code>과 <code>adventure_nether</code> 사이를 연결하고, 엔드 포탈은
+            <code>adventure_end</code>와 다시 노멀 월드 스폰을 연결합니다.
+          </p>
+        </LegalSection>
+
         <LegalSection title="Discord 채널은 하나만 써도 됩니다">
           <p>
             지금 구조에서는 월드마다 Discord 채널을 새로 만들 필요가 없습니다. 하나의 로그 채널에 모든
@@ -540,6 +562,7 @@ MVMP_WORLDS=main:DISCORD_CHANNEL_ID:Main World:prefix 없는 메시지가 들어
             <li>서버 시작 후 콘솔에서 MVMPDiscordBridge 로드 메시지를 확인합니다.</li>
             <li>플레이어가 접속하면 Discord에 <code>[world] Player joined the server.</code> 형태로 올라와야 합니다.</li>
             <li>채팅하면 <code>[world] &lt;Player&gt; message</code> 형태로 올라와야 합니다.</li>
+            <li>도전과제를 달성하면 Discord에 advancement 로그가 올라와야 합니다.</li>
             <li>prefix가 없다면 서버를 재시작했는지, 최신 jar가 plugins 폴더에 복사됐는지 확인합니다.</li>
           </ul>
         </LegalSection>

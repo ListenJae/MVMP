@@ -4,3 +4,12 @@ main: com.listenjae.mvmp.discordbridge.MVMPDiscordBridgePlugin
 api-version: "1.21"
 author: ListenJae
 description: Mirrors Minecraft server events and chat to Discord.
+commands:
+  mvmp:
+    description: MVMP world and bridge commands.
+    usage: /mvmp <createworld|tpall|help>
+    permission: mvmp.admin
+permissions:
+  mvmp.admin:
+    description: Allows MVMP world management commands.
+    default: op

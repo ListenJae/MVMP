@@ -8,4 +8,5 @@ messages:
   player-join: "[%world%] %player% joined the server."
   player-quit: "[%world%] %player% left the server."
   player-death: "[%world%] %message%"
+  advancement: "[%world%] %player% completed advancement %advancement%."
   chat: "[%world%] <%player%> %message%"
