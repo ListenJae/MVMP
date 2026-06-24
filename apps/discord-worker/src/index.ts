@@ -91,9 +91,13 @@ function loadEnvironment() {
 
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user?.tag ?? "MVMP bot"}`);
-  const store = await loadStore();
-  await syncAllWorlds(store);
-  await saveAndExport(store);
+  try {
+    const store = await loadStore();
+    await syncAllWorlds(store);
+    await saveAndExport(store);
+  } catch (error) {
+    logWorkerError(error);
+  }
 });
 
 client.on("messageCreate", async (message) => {
@@ -102,9 +106,13 @@ client.on("messageCreate", async (message) => {
     return;
   }
 
-  const store = await loadStore();
-  ingestMessage(store, world, message);
-  await saveAndExport(store);
+  try {
+    const store = await loadStore();
+    ingestMessage(store, world, message);
+    await saveAndExport(store);
+  } catch (error) {
+    logWorkerError(error);
+  }
 });
 
 async function syncAllWorlds(store: Store) {
@@ -411,6 +419,16 @@ function upsertById<T extends { id: string }>(items: T[], item: T) {
     items[index] = item;
   } else {
     items.push(item);
+  }
+}
+
+function logWorkerError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`[MVMP worker] ${message}`);
+  if (message.includes("Missing Access")) {
+    console.error("[MVMP worker] The bot cannot read the configured Discord channel.");
+    console.error("[MVMP worker] Check that the bot is invited to the server and can View Channel + Read Message History.");
+    console.error("[MVMP worker] Also confirm DISCORD_CHANNEL_ID points to the log channel, not a webhook ID.");
   }
 }
 

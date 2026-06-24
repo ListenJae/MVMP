@@ -22,6 +22,7 @@ Double-click these files from the project root:
 - `start-web.bat`: starts the MVMP web page at `http://localhost:3000`.
 - `build-plugin.bat`: builds and copies the Minecraft plugin jar.
 - `update-dependencies.bat`: installs npm dependencies and verifies the web/plugin builds.
+- `publish-web-data.bat`: commits exported web data and pushes it so GitHub Pages redeploys.
 
 Before running Discord features, edit `.env` and fill in:
 
@@ -159,6 +160,26 @@ Nether and End portals are routed within the same world set. For example, a Neth
 `/mvmp tpall adventure_normal` teleports every online player to that world's spawn.
 
 The bridge also sends completed advancements to Discord, excluding recipe unlock spam.
+
+## Publishing Live Data To GitHub Pages
+
+GitHub Pages is static hosting. It cannot directly listen to Discord in real time.
+
+The current flow is:
+
+```text
+Discord worker -> local JSON files -> git commit/push -> GitHub Actions -> GitHub Pages
+```
+
+After `start-discord-worker.bat` exports updated data, run:
+
+```text
+publish-web-data.bat
+```
+
+This commits `apps/discord-web/public/data` and `apps/discord-web/public/feed.json`, pushes the commit,
+and triggers the Pages deployment workflow. Updates usually appear after the GitHub Actions deployment
+finishes.
 
 ## Web Deployment
 
